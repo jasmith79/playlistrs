@@ -14,6 +14,7 @@ pub struct PlaylisterArgs {
     pub output_path: PathBuf,
     pub music_path: String,
     pub verbose: bool,
+    pub use_file_url: bool,
 }
 
 /// Parses the args from env::args_os.
@@ -37,6 +38,11 @@ pub fn parse_args() -> Box<PlaylisterArgs> {
             .takes_value(true)
             .short("o")
             .long("output_path"))
+        // Issue here is that some apps (notably VLC) require a
+        // file URL and some apps (e.g. on Android) want raw paths.
+        .arg(clap::Arg::with_name("use_file_url")
+            .help("Whether to use a raw path or a file URL")
+            .long("use_file_url"))
         .arg(clap::Arg::with_name("verbose")
             .help("Verbose console output.")
             .short("v")
@@ -50,11 +56,13 @@ pub fn parse_args() -> Box<PlaylisterArgs> {
     let output_path = matches.value_of("output_path").unwrap_or(path);
     let music_path = matches.value_of("music_path").unwrap_or("").to_string();
     let verbose = matches.is_present("verbose");
+    let use_file_url = matches.is_present("use_file_url");
     let parsed_args = Box::new(PlaylisterArgs {
         path: PathBuf::from(path),
         output_path: PathBuf::from(output_path),
         music_path,
         verbose,
+        use_file_url,
     });
 
     return parsed_args;
