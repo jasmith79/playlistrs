@@ -10,23 +10,23 @@ mod m3u;
 mod read_library_xml;
 mod track_record;
 
-use regex::Regex;
 use std::fs;
 
-fn main() {
-    // If Apple changes this again move to switch statement rather than
-    // making the regex scarier.
-    let old_path = Regex::new(r"[\\/]Users[\\/][^\\/]+[\\/]Music[\\/](?:Music|iTunes)[\\/](?:iTunes(?: |%20)Media|Media\.localized)")
-        .expect("Could not create Regex for music path matching");
+use crate::track_record::{path_to_file_url, calc_new_location};
 
+fn main() {
     let parsed_args = cli::parse_args();
     let xml_data = read_library_xml::read_library(parsed_args.path);
-    let playlists = read_library_xml::extract_playlists(xml_data);
+    let playlists = read_library_xml::extract_playlists(&xml_data);
     for (name, mut tracks) in playlists {
         if !parsed_args.music_path.is_empty() {
             for track in &mut tracks {
-                let stripped = old_path.replace_all(&track.location, "");
-                track.location = format!("{}{}", parsed_args.music_path, stripped);
+                let updated = calc_new_location(&track.location, &parsed_args.music_path);
+                track.location = if parsed_args.use_file_url {
+                    path_to_file_url(&updated)
+                } else {
+                    updated.to_owned()
+                };
             }
         }
         let playlist = m3u::convert(&name, &tracks);

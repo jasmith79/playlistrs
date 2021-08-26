@@ -6,12 +6,12 @@
 //! @author jasmith79
 //! @license MIT
 //! @copyright 2021
-use percent_encoding::percent_decode;
+
 use plist::{Dictionary, Value};
 use std::path::PathBuf;
 use unicode_normalization::UnicodeNormalization;
 
-use crate::track_record::TrackRecord;
+use crate::track_record::{TrackRecord, file_url_to_path};
 
 /// Reads the XML Library file into a data structure in memory.
 pub fn read_library(file: PathBuf) -> Dictionary {
@@ -42,25 +42,15 @@ pub fn extract_track_data(track: &Dictionary) -> TrackRecord {
         .nfc()
         .to_string();
 
-    let location = percent_decode(
-        track
-            .get("Location")
-            .expect(&format!("Track {}/{} has no Location!", track_id, name))
-            .as_string()
-            .expect(&format!(
-                "Track {}/{} location is not a string.",
-                track_id, name
-            ))
-            .as_bytes(),
-    )
-    .decode_utf8()
-    .expect(&format!(
-        "Track {}/{} Location is not UTF-8 encoded.",
-        track_id, name
-    ))
-    .nfc()
-    .to_string()[7..] // strips file://
-        .to_string();
+    let location = file_url_to_path(track
+        .get("Location")
+        .expect(&format!("Track {}/{} has no Location!", track_id, name))
+        .as_string()
+        .expect(&format!(
+            "Track {}/{} location is not a string.",
+            track_id, name
+        ))
+    );
 
     let duration_ms = track
         .get("Total Time")
@@ -153,8 +143,8 @@ pub fn valid_track(track: &&Dictionary) -> bool {
     return passes;
 }
 
-pub fn extract_playlist_data(
-    all_tracks: &Dictionary,
+pub fn extract_playlist_data<'a>(
+    all_tracks: &'a Dictionary,
     play: &Dictionary,
 ) -> (String, Vec<TrackRecord>) {
     let trks = play
@@ -199,7 +189,7 @@ pub fn extract_playlist_data(
 }
 
 /// Extracts playlist information from the XML data.
-pub fn extract_playlists(xml_data: Dictionary) -> Vec<(String, Vec<TrackRecord>)> {
+pub fn extract_playlists<'a>(xml_data: &'a Dictionary) -> Vec<(String, Vec<TrackRecord>)> {
     let tracks = &xml_data
         .get("Tracks")
         .expect("No tracks present in Library XML")

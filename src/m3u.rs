@@ -6,7 +6,7 @@
 //! @license MIT
 //! @copyright 2021
 use crate::track_record::TrackRecord;
-use percent_encoding::percent_decode_str;
+use urlencoding::decode;
 
 /// Converts the vector of TrackRecords into an m3u String.
 pub fn convert(title: &str, tracks: &Vec<TrackRecord>) -> String {
@@ -27,13 +27,11 @@ pub fn convert(title: &str, tracks: &Vec<TrackRecord>) -> String {
                 ""
             };
 
-            let artist = percent_decode_str(artist_ref)
-                .decode_utf8()
+            let artist = decode(artist_ref)
                 .expect("Artist is present in the record but not a UTF-8 encoded string.")
                 .to_string();
 
-            let name = percent_decode_str(&track.name)
-                .decode_utf8()
+            let name = decode(&track.name)
                 .expect("Track Name is present in the record but not a UTF-8 encoded string.")
                 .to_string();
 
