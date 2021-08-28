@@ -54,7 +54,7 @@ pub fn calc_new_location(old_path: &str, new_path: &str) -> String {
     lazy_static! {
         // If Apple changes this again move to switch statement rather than
         // making the regex scarier.
-        static ref APPLE_PATH: Regex = Regex::new(r"[\\/]Users[\\/][^\\/]+[\\/]Music[\\/](?:Music|iTunes)[\\/](?:iTunes(?: |%20)Media|Media\.localized)")
+        static ref APPLE_PATH: Regex = Regex::new(r"[\\/]Users[\\/][^\\/]+[\\/]Music[\\/](?:Music|iTunes)[\\/](?:iTunes(?: |%20)Media|Media\.localized)\\/")
         .expect("Could not create Regex for music path matching");
     }
     
