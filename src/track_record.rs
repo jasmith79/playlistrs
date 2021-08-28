@@ -5,7 +5,7 @@
 //! @author jasmith79
 //! @license MIT
 //! @copyright 2021
-use std::path::Path;
+use std::path::{Path, MAIN_SEPARATOR};
 use lazy_static::lazy_static;
 use urlencoding::{decode, encode};
 use unicode_normalization::UnicodeNormalization;
@@ -36,7 +36,17 @@ pub fn file_url_to_path(file_url: &str) -> String {
 }
 
 pub fn path_to_file_url(path: &str) -> String {
-    let encoded = encode(&path);
+    let encoded = path.split(MAIN_SEPARATOR)
+        .collect::<Vec<&str>>()
+        .iter()
+        .map(|piece| {
+            return encode(piece).to_string();
+        })
+        .collect::<Vec<String>>()
+        // I know this is the 'wrong' way to do this
+        // vs the PathBuf .join, but #whateves
+        .join(&MAIN_SEPARATOR.to_string());
+
     return format!("file://{}", encoded);
 }
 
@@ -51,5 +61,8 @@ pub fn calc_new_location(old_path: &str, new_path: &str) -> String {
     let stripped = APPLE_PATH.replace_all(old_path, "").to_string();
     // TODO: add better error logic for non unicode characters, i.e. replace
     // to_string_lossy
-    return Path::new(new_path).join(stripped).to_string_lossy().to_string();
+    return Path::new(new_path)
+        .join(stripped)
+        .to_string_lossy()
+        .to_string();
 }

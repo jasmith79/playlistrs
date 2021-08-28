@@ -6,7 +6,6 @@
 //! @author jasmith79
 //! @license MIT
 //! @copyright 2021
-
 use plist::{Dictionary, Value};
 use std::path::PathBuf;
 use unicode_normalization::UnicodeNormalization;
