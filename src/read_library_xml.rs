@@ -9,11 +9,17 @@
 use plist::{Dictionary, Value};
 use std::path::PathBuf;
 use unicode_normalization::UnicodeNormalization;
+use crate::cli::get_args;
 
-use crate::track_record::{TrackRecord, file_url_to_path};
+use crate::track_record::{
+    TrackRecord,
+    file_url_to_path,
+    path_to_file_url,
+    calc_new_location
+};
 
 /// Reads the XML Library file into a data structure in memory.
-pub fn read_library(file: PathBuf) -> Dictionary {
+pub fn read_library(file: &PathBuf) -> Dictionary {
     let parsed = Value::from_file(file).expect("failed to read Library XML");
     let dict = parsed
         .as_dictionary()
@@ -145,6 +151,8 @@ pub fn valid_track(track: &&Dictionary) -> bool {
 pub fn extract_playlist_data<'a>(
     all_tracks: &'a Dictionary,
     play: &Dictionary,
+    music_path: &str,
+    use_file_url: bool,
 ) -> (String, Vec<TrackRecord>) {
     let trks = play
         .get("Playlist Items")
@@ -174,7 +182,19 @@ pub fn extract_playlist_data<'a>(
             return track;
         })
         .filter(valid_track)
-        .map(extract_track_data)
+        .map(|trk| {
+            let mut track = extract_track_data(trk);
+            if !music_path.is_empty() {
+                let updated = calc_new_location(&track.location, music_path);
+                track.location = if use_file_url {
+                    path_to_file_url(&updated)
+                } else {
+                    updated.to_owned()
+                };
+            }
+
+            return track;
+        })
         .collect();
 
     return (
@@ -189,6 +209,7 @@ pub fn extract_playlist_data<'a>(
 
 /// Extracts playlist information from the XML data.
 pub fn extract_playlists<'a>(xml_data: &'a Dictionary) -> Vec<(String, Vec<TrackRecord>)> {
+    let args = &get_args();
     let tracks = &xml_data
         .get("Tracks")
         .expect("No tracks present in Library XML")
@@ -213,7 +234,12 @@ pub fn extract_playlists<'a>(xml_data: &'a Dictionary) -> Vec<(String, Vec<Track
         .filter(|play| !(play.contains_key("Master") || play.contains_key("Distinguished Kind")))
         // Tried and failed to make this return a closure to get a lil closer to point-free.
         // TODO: figure out how to partially apply the tracks param
-        .map(|play| extract_playlist_data(tracks, play))
+        .map(|play| extract_playlist_data(
+            tracks, 
+            play,
+            &args.music_path,
+            args.use_file_url,
+        ))
         .collect();
 
     return playlists;

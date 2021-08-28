@@ -7,6 +7,7 @@
 //! @copyright 2021
 use clap;
 use std::path::PathBuf;
+use lazy_static::lazy_static;
 
 /// Definition for the struct returned from parse_args.
 pub struct PlaylisterArgs {
@@ -17,9 +18,13 @@ pub struct PlaylisterArgs {
     pub use_file_url: bool,
 }
 
+pub struct ArgsWrapper {
+    args: PlaylisterArgs,
+}
+
 /// Parses the args from env::args_os.
 /// returns an instance of PlaylisterArgs.
-pub fn parse_args() -> Box<PlaylisterArgs> {
+pub fn parse_args() -> ArgsWrapper {
     let matches = clap::App::new("Playlister")
         .version("0.1.0")
         .author("Jared Smith <jasmith79@gmail.com>")
@@ -57,13 +62,22 @@ pub fn parse_args() -> Box<PlaylisterArgs> {
     let music_path = matches.value_of("music_path").unwrap_or("").to_string();
     let verbose = matches.is_present("verbose");
     let use_file_url = matches.is_present("use_file_url");
-    let parsed_args = Box::new(PlaylisterArgs {
+    let parsed_args = PlaylisterArgs {
         path: PathBuf::from(path),
         output_path: PathBuf::from(output_path),
         music_path,
         verbose,
         use_file_url,
-    });
+    };
 
-    return parsed_args;
+    return ArgsWrapper {
+        args: parsed_args,
+    };
+}
+
+pub fn get_args() -> &'static PlaylisterArgs {
+    lazy_static! {
+        pub static ref ARGS: ArgsWrapper = parse_args();
+    }
+    return &ARGS.args;
 }
