@@ -6,17 +6,12 @@
 //! @author jasmith79
 //! @license MIT
 //! @copyright 2021
+use crate::cli::get_args;
 use plist::{Dictionary, Value};
 use std::path::PathBuf;
 use unicode_normalization::UnicodeNormalization;
-use crate::cli::get_args;
 
-use crate::track_record::{
-    TrackRecord,
-    file_url_to_path,
-    path_to_file_url,
-    calc_new_location
-};
+use crate::track_record::{calc_new_location, file_url_to_path, path_to_file_url, TrackRecord};
 
 /// Reads the XML Library file into a data structure in memory.
 pub fn read_library(file: &PathBuf) -> Dictionary {
@@ -47,14 +42,15 @@ pub fn extract_track_data(track: &Dictionary) -> TrackRecord {
         .nfc()
         .to_string();
 
-    let location = file_url_to_path(track
-        .get("Location")
-        .expect(&format!("Track {}/{} has no Location!", track_id, name))
-        .as_string()
-        .expect(&format!(
-            "Track {}/{} location is not a string.",
-            track_id, name
-        ))
+    let location = file_url_to_path(
+        track
+            .get("Location")
+            .expect(&format!("Track {}/{} has no Location!", track_id, name))
+            .as_string()
+            .expect(&format!(
+                "Track {}/{} location is not a string.",
+                track_id, name
+            )),
     );
 
     let duration_ms = track
@@ -234,12 +230,7 @@ pub fn extract_playlists<'a>(xml_data: &'a Dictionary) -> Vec<(String, Vec<Track
         .filter(|play| !(play.contains_key("Master") || play.contains_key("Distinguished Kind")))
         // Tried and failed to make this return a closure to get a lil closer to point-free.
         // TODO: figure out how to partially apply the tracks param
-        .map(|play| extract_playlist_data(
-            tracks, 
-            play,
-            &args.music_path,
-            args.use_file_url,
-        ))
+        .map(|play| extract_playlist_data(tracks, play, &args.music_path, args.use_file_url))
         .collect();
 
     return playlists;

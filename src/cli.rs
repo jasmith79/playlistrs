@@ -6,8 +6,8 @@
 //! @license MIT
 //! @copyright 2021
 use clap;
-use std::path::PathBuf;
 use lazy_static::lazy_static;
+use std::path::PathBuf;
 
 /// Definition for the struct returned from parse_args.
 pub struct PlaylisterArgs {
@@ -70,9 +70,7 @@ pub fn parse_args() -> ArgsWrapper {
         use_file_url,
     };
 
-    return ArgsWrapper {
-        args: parsed_args,
-    };
+    return ArgsWrapper { args: parsed_args };
 }
 
 pub fn get_args() -> &'static PlaylisterArgs {

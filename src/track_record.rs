@@ -5,11 +5,11 @@
 //! @author jasmith79
 //! @license MIT
 //! @copyright 2021
-use std::path::{Path, MAIN_SEPARATOR};
 use lazy_static::lazy_static;
-use urlencoding::{decode, encode};
-use unicode_normalization::UnicodeNormalization;
 use regex::Regex;
+use std::path::{Path, MAIN_SEPARATOR};
+use unicode_normalization::UnicodeNormalization;
+use urlencoding::{decode, encode};
 #[derive(Debug, Clone)]
 pub struct TrackRecord {
     pub location: String,
@@ -22,10 +22,7 @@ pub struct TrackRecord {
 }
 
 pub fn file_url_to_path(file_url: &str) -> String {
-    let err_msg = &format!(
-        "Location {} is not UTF-8 encoded.",
-        file_url,
-    );
+    let err_msg = &format!("Location {} is not UTF-8 encoded.", file_url,);
 
     return decode(&file_url)
         .expect(err_msg)
@@ -36,7 +33,8 @@ pub fn file_url_to_path(file_url: &str) -> String {
 }
 
 pub fn path_to_file_url(path: &str) -> String {
-    let encoded = path.split(MAIN_SEPARATOR)
+    let encoded = path
+        .split(MAIN_SEPARATOR)
         .collect::<Vec<&str>>()
         .iter()
         .map(|piece| {
@@ -57,7 +55,7 @@ pub fn calc_new_location(old_path: &str, new_path: &str) -> String {
         static ref APPLE_PATH: Regex = Regex::new(r"[\\/]Users[\\/][^\\/]+[\\/]Music[\\/](?:Music|iTunes)[\\/](?:iTunes(?: |%20)Media|Media\.localized)\\/")
         .expect("Could not create Regex for music path matching");
     }
-    
+
     let stripped = APPLE_PATH.replace_all(old_path, "").to_string();
     // TODO: add better error logic for non unicode characters, i.e. replace
     // to_string_lossy
