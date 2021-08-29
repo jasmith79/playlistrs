@@ -2,9 +2,9 @@
 //!
 //! Defines the TrackRecord struct for data extracted from the Library
 //! XML file.
-//! @author jasmith79
-//! @license MIT
-//! @copyright 2021
+//! author: jasmith79
+//! license: MIT
+//! copyright: 2021
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::path::{Path, MAIN_SEPARATOR};
@@ -21,6 +21,15 @@ pub struct TrackRecord {
     pub composer: String,
 }
 
+/// Converts a file URL to a bare path string (&str). Inverse of
+/// path_to_file_url.
+///
+/// # Example
+///
+/// ```
+/// let p = file_url_to_path("file:///path/to/some%20file.txt");
+/// assert_eq!(p, "/path/to/some file.txt");
+/// ```
 pub fn file_url_to_path(file_url: &str) -> String {
     let err_msg = &format!("Location {} is not UTF-8 encoded.", file_url,);
 
@@ -32,6 +41,15 @@ pub fn file_url_to_path(file_url: &str) -> String {
         .to_string();
 }
 
+/// Converts a path (as a &str) to a file URL. Inverse of
+/// file_url_to_path.
+///
+/// # Example
+///
+/// ```
+/// let p = path_to_file_url("/path/to/some file.txt");
+/// assert_eq!(p, "file:///path/to/some%20file.txt");
+/// ```
 pub fn path_to_file_url(path: &str) -> String {
     let encoded = path
         .split(MAIN_SEPARATOR)
@@ -48,6 +66,15 @@ pub fn path_to_file_url(path: &str) -> String {
     return format!("file://{}", encoded);
 }
 
+/// Calculates the new path to the track on the file system.
+///
+/// # Example
+/// ```
+/// let l = calc_new_location(
+///     "/Users/Bob/Music/Music/Media.localized/some_artist/some_album/song.mp3",
+///     "/home/Bob/Music", // switching to Linux maybe?
+/// );
+/// assert_eq!(l, "/home/Bob/Music/some_artist/some_album/song.mp3");
 pub fn calc_new_location(old_path: &str, new_path: &str) -> String {
     lazy_static! {
         // If Apple changes this again move to switch statement rather than
