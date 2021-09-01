@@ -7,7 +7,7 @@
 //! copyright: 2021
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::path::{self, MAIN_SEPARATOR, Path};
+use std::path::{MAIN_SEPARATOR, Path};
 use unicode_normalization::UnicodeNormalization;
 use urlencoding::{decode, encode};
 

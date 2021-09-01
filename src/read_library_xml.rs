@@ -11,7 +11,7 @@ use plist::{Dictionary, Value};
 use std::path::PathBuf;
 use unicode_normalization::UnicodeNormalization;
 
-use crate::track_record::{file_url_to_path, TrackRecord};
+use crate::track_record::{TrackRecord};
 
 /// Reads the XML Library file into a data structure in memory.
 pub fn read_library(file: &PathBuf) -> Dictionary {
