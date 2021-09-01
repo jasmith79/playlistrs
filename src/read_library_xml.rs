@@ -11,7 +11,7 @@ use plist::{Dictionary, Value};
 use std::path::PathBuf;
 use unicode_normalization::UnicodeNormalization;
 
-use crate::track_record::{calc_new_location, file_url_to_path, path_to_file_url, TrackRecord};
+use crate::track_record::{file_url_to_path, TrackRecord};
 
 /// Reads the XML Library file into a data structure in memory.
 pub fn read_library(file: &PathBuf) -> Dictionary {
@@ -42,16 +42,14 @@ pub fn extract_track_data(track: &Dictionary) -> TrackRecord {
         .nfc()
         .to_string();
 
-    let location = file_url_to_path(
-        track
-            .get("Location")
-            .expect(&format!("Track {}/{} has no Location!", track_id, name))
-            .as_string()
-            .expect(&format!(
-                "Track {}/{} location is not a string.",
-                track_id, name
-            )),
-    );
+    let location = track
+        .get("Location")
+        .expect(&format!("Track {}/{} has no Location!", track_id, name))
+        .as_string()
+        .expect(&format!(
+            "Track {}/{} location is not a string.",
+            track_id, name
+        ));
 
     let duration_ms = track
         .get("Total Time")
@@ -106,7 +104,7 @@ pub fn extract_track_data(track: &Dictionary) -> TrackRecord {
         .nfc()
         .to_string();
 
-    return TrackRecord {
+    return TrackRecord::new(
         location,
         duration_ms,
         album,
@@ -114,7 +112,7 @@ pub fn extract_track_data(track: &Dictionary) -> TrackRecord {
         artist,
         album_artist,
         composer,
-    };
+    );
 }
 
 pub fn valid_track(track: &&Dictionary) -> bool {
@@ -148,7 +146,6 @@ pub fn extract_playlist_data<'a>(
     all_tracks: &'a Dictionary,
     play: &Dictionary,
     music_path: &str,
-    use_file_url: bool,
 ) -> (String, Vec<TrackRecord>) {
     let trks = play
         .get("Playlist Items")
@@ -181,12 +178,7 @@ pub fn extract_playlist_data<'a>(
         .map(|trk| {
             let mut track = extract_track_data(trk);
             if !music_path.is_empty() {
-                let updated = calc_new_location(&track.location, music_path);
-                track.location = if use_file_url {
-                    path_to_file_url(&updated)
-                } else {
-                    updated.to_owned()
-                };
+                track.update_location(music_path);
             }
 
             return track;
@@ -230,7 +222,7 @@ pub fn extract_playlists<'a>(xml_data: &'a Dictionary) -> Vec<(String, Vec<Track
         .filter(|play| !(play.contains_key("Master") || play.contains_key("Distinguished Kind")))
         // Tried and failed to make this return a closure to get a lil closer to point-free.
         // TODO: figure out how to partially apply the tracks param
-        .map(|play| extract_playlist_data(tracks, play, &args.music_path, args.use_file_url))
+        .map(|play| extract_playlist_data(tracks, play, &args.music_path))
         .collect();
 
     return playlists;

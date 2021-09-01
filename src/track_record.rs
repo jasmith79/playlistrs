@@ -7,9 +7,11 @@
 //! copyright: 2021
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::path::{Path, MAIN_SEPARATOR};
+use std::path::{self, MAIN_SEPARATOR, Path};
 use unicode_normalization::UnicodeNormalization;
 use urlencoding::{decode, encode};
+
+use crate::cli;
 #[derive(Debug, Clone)]
 pub struct TrackRecord {
     pub location: String,
@@ -19,6 +21,51 @@ pub struct TrackRecord {
     pub artist: String,
     pub album_artist: String,
     pub composer: String,
+}
+
+impl TrackRecord {
+    pub fn new(
+        location: &str,
+        duration_ms: i64,
+        album: String,
+        name: String,
+        artist: String,
+        album_artist: String,
+        composer: String,
+    ) -> TrackRecord {
+        return TrackRecord {
+            location: file_url_to_path(location),
+            duration_ms,
+            album,
+            name,
+            artist,
+            album_artist,
+            composer,
+        }
+    }
+
+    pub fn update_location(&mut self, new_path: &str) -> &TrackRecord {
+        lazy_static! {
+            // If Apple changes this again move to switch statement rather than
+            // making the regex scarier.
+            static ref APPLE_PATH: Regex = Regex::new(r"[\\/]Users[\\/][^\\/]+[\\/]Music[\\/](?:Music|iTunes)[\\/](?:iTunes(?: |%20)Media|Media\.localized)\\/")
+            .expect("Could not create Regex for music path matching");
+        }
+
+        let stripped = APPLE_PATH.replace_all(&self.location, "").to_string();
+        let location = Path::new(new_path)
+            .join(stripped)
+            .to_string_lossy()
+            .to_string();
+        
+        self.location = if cli::get_args().use_file_url {
+            path_to_file_url(&location)
+        } else {
+            location
+        };
+        
+        return self;
+    }
 }
 
 /// Converts a file URL to a bare path string (&str). Inverse of
@@ -64,30 +111,4 @@ pub fn path_to_file_url(path: &str) -> String {
         .join(&MAIN_SEPARATOR.to_string());
 
     return format!("file://{}", encoded);
-}
-
-/// Calculates the new path to the track on the file system.
-///
-/// # Example
-/// ```
-/// let l = calc_new_location(
-///     "/Users/Bob/Music/Music/Media.localized/some_artist/some_album/song.mp3",
-///     "/home/Bob/Music", // switching to Linux maybe?
-/// );
-/// assert_eq!(l, "/home/Bob/Music/some_artist/some_album/song.mp3");
-pub fn calc_new_location(old_path: &str, new_path: &str) -> String {
-    lazy_static! {
-        // If Apple changes this again move to switch statement rather than
-        // making the regex scarier.
-        static ref APPLE_PATH: Regex = Regex::new(r"[\\/]Users[\\/][^\\/]+[\\/]Music[\\/](?:Music|iTunes)[\\/](?:iTunes(?: |%20)Media|Media\.localized)\\/")
-        .expect("Could not create Regex for music path matching");
-    }
-
-    let stripped = APPLE_PATH.replace_all(old_path, "").to_string();
-    // TODO: add better error logic for non unicode characters, i.e. replace
-    // to_string_lossy
-    return Path::new(new_path)
-        .join(stripped)
-        .to_string_lossy()
-        .to_string();
 }
