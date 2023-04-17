@@ -54,10 +54,9 @@ pub struct Track {
 impl Track {
     pub fn get_artist(&self) -> &str {
         self.artist
-            .as_ref()
-            .or(self.album_artist.as_ref())
-            .or(self.composer.as_ref())
-            .map(|x| &**x) // Convert &String to &str, thanks rust-analyzer
+            .as_deref()
+            .or(self.album_artist.as_deref())
+            .or(self.composer.as_deref())
             .unwrap_or(UNKNOWN_ARTIST)
     }
 
