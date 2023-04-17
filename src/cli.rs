@@ -8,7 +8,7 @@
 use clap::{Arg, ArgAction, Command};
 use std::path::PathBuf;
 
-static MUSIC_PATH_HELP: &'static str =
+static MUSIC_PATH_HELP: &str =
     "Optional path to music files, this will replace the iTunes®\n\
 path to your media files. For example, if you have a music\n\
 file on your Mac at \n\
@@ -16,17 +16,17 @@ file on your Mac at \n\
 then this path if present will replace everything before\n\
 'SomeAlbum'.";
 
-static FILE_URL_HELP: &'static str =
+static FILE_URL_HELP: &str =
     "By default Playlister will output plain file paths. However,\n\
 some applications like VLC expect/work better with file\n\
 urls.";
 
-static DEFAULT_LIST_HELP: &'static str =
+static DEFAULT_LIST_HELP: &str =
     "By default iTunes/Music will create a number of playlists,\n\
 like Downloaded and playlister will ignore them unless you\n\
 pass this flag.";
 
-static ABOUT: &'static str = "Converts iTunes® playlists into universal format used by\n\
+static ABOUT: &str = "Converts iTunes® playlists into universal format used by\n\
 most music players.";
 
 #[derive(Debug)]
@@ -86,7 +86,7 @@ fn parse_and_validate(matcher: Command) -> PlaylisterArgs {
     let args = matcher.get_matches();
     let path = args
         .get_one::<String>("file_path")
-        .map(|p| PathBuf::from(p))
+        .map(PathBuf::from)
         .expect("Must include a path to a Library XML file");
 
     if !path.is_file() {
@@ -100,13 +100,13 @@ fn parse_and_validate(matcher: Command) -> PlaylisterArgs {
         .try_get_one::<String>("music_path")
         .ok()
         .flatten()
-        .map(|p| PathBuf::from(p));
+        .map(PathBuf::from);
 
     let opath = args
         .try_get_one::<String>("output_path")
         .ok()
         .flatten()
-        .map(|p| PathBuf::from(p))
+        .map(PathBuf::from)
         .unwrap_or(input_dir);
 
     if !opath.is_dir() {

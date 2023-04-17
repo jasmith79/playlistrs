@@ -28,7 +28,7 @@ fn main() {
                 println!("Converting playlist {}.", playlist.name);
             }
             let (name, contents) =
-                to_m3u_playlist(&itunes_prefix, &args, &library_data.tracks, &playlist);
+                to_m3u_playlist(&itunes_prefix, &args, &library_data.tracks, playlist);
             let path = args.output_path.join(name);
             write_to_file(&args, &path, &contents);
             if args.verbose > 1 {

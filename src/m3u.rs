@@ -75,7 +75,7 @@ pub fn to_m3u_playlist<P>(
 where
     P: AsRef<Path> + ?Sized,
 {
-    let process_track = partial!(to_m3u_track, itunes_prefix, &args, _);
+    let process_track = partial!(to_m3u_track, itunes_prefix, args, _);
     let playlist_tracks = playlist
         .playlist_items
         .iter()

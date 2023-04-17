@@ -28,7 +28,7 @@ where
         };
     }
 
-    return Ok(prefix);
+    Ok(prefix)
 }
 
 pub fn deserialize_path<'de, D>(deserializer: D) -> Result<Option<PathBuf>, D::Error>
@@ -40,7 +40,7 @@ where
     // than the Result <-> Option method-chaining route.
     match Url::parse(&de.nfc().to_string()) {
         Ok(url) => Ok(url.to_file_path().ok()),
-        Err(_e) => return Ok(None),
+        Err(_e) => Ok(None),
     }
 }
 
@@ -53,7 +53,7 @@ where
         .map(|de| de.nfc().to_string()))
 }
 
-pub fn write_to_file<P, C>(args: &PlaylisterArgs, path: &P, contents: &C) -> ()
+pub fn write_to_file<P, C>(args: &PlaylisterArgs, path: &P, contents: &C)
 where
     P: AsRef<Path> + std::fmt::Debug,
     C: AsRef<[u8]>,

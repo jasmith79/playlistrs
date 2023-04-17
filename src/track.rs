@@ -9,8 +9,8 @@ use crate::path_utils::{deserialize_and_normalize, deserialize_path};
 use serde::Deserialize;
 use std::path::PathBuf;
 
-static UNTITLED_TRACK: &'static str = "Untitled Track";
-static UNKNOWN_ARTIST: &'static str = "Unknown Artist";
+static UNTITLED_TRACK: &str = "Untitled Track";
+static UNKNOWN_ARTIST: &str = "Unknown Artist";
 
 #[derive(Deserialize)]
 pub struct Track {
@@ -62,9 +62,6 @@ impl Track {
     }
 
     pub fn get_name(&self) -> &str {
-        match &self.name {
-            None => UNTITLED_TRACK,
-            Some(title) => &title,
-        }
+        self.name.as_deref().unwrap_or(UNTITLED_TRACK)
     }
 }
