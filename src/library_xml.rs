@@ -9,7 +9,6 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use plist::from_file;
 use serde::Deserialize;
 
 use crate::path_utils::generate_itunes_prefix;
@@ -37,18 +36,6 @@ pub struct LibraryXMLData {
 
     #[serde(rename = "Playlists")]
     pub playlists: Vec<Playlist>,
-}
-
-pub fn read_xml<P>(path: &P) -> LibraryXMLData
-where
-    P: AsRef<Path>,
-{
-    let res = from_file::<&P, LibraryXMLData>(path);
-    if res.is_err() {
-        panic!("Could not load playlist data from the given file.")
-    }
-
-    res.unwrap()
 }
 
 pub fn get_itunes_prefix(lib_xml: &LibraryXMLData) -> &Path {

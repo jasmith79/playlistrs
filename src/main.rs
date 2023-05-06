@@ -12,15 +12,21 @@ mod path_utils;
 mod track;
 
 use cli::parse_args;
-use library_xml::{get_itunes_prefix, read_xml};
+use library_xml::get_itunes_prefix;
 use m3u::to_m3u_playlist;
 use path_utils::write_to_file;
+use plist::from_file;
 
 fn main() {
     let default_lists = vec!["Downloaded", "Library", "Music"];
     let args = parse_args();
     let library_data = read_xml(&args.path);
     let itunes_prefix = get_itunes_prefix(&library_data);
+    let library_data = from_file(&args.path).unwrap_or_else(|_err| {
+        eprintln!("Could not read XML plist file.");
+        process::exit(1);
+    });
+
     for playlist in &library_data.playlists {
         let name: &str = &playlist.name;
         if args.include_default_playlists || !default_lists.contains(&name) {
