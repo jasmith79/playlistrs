@@ -5,6 +5,8 @@
 //! @author jasmith79
 //! @license MIT
 //! @copyright 2023
+use std::error::Error;
+use std::fmt;
 use std::fs::write;
 use std::path::{Path, PathBuf};
 
@@ -14,7 +16,21 @@ use url::Url;
 
 use crate::cli::PlaylisterArgs;
 
-pub fn generate_itunes_prefix<P>(path: &P) -> Result<&Path, ()>
+#[derive(Debug)]
+pub struct PrefixError;
+
+impl Error for PrefixError {}
+
+impl fmt::Display for PrefixError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Could not determine iTunes prefix from first track location"
+        )
+    }
+}
+
+pub fn generate_itunes_prefix<P>(path: &P) -> Result<&Path, PrefixError>
 where
     P: AsRef<Path> + ?Sized,
 {
@@ -24,7 +40,7 @@ where
     while !prefix.ends_with("Music") {
         prefix = match prefix.parent() {
             Some(p) => p,
-            None => return Err(()),
+            None => return Err(PrefixError),
         };
     }
 
@@ -64,7 +80,7 @@ where
 
     let res = write(path, contents);
     if res.is_err() && args.verbose > 0 {
-        println!("Couldn't write file {:?}", path);
+        eprintln!("Couldn't write file {:?}", path);
     }
 
     if args.verbose > 2 {

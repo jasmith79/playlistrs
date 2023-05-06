@@ -6,6 +6,7 @@
 //! @author jasmith79
 //! @license MIT
 //! @copyright 2023
+use anyhow::{Context, Result};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -38,11 +39,18 @@ pub struct LibraryXMLData {
     pub playlists: Vec<Playlist>,
 }
 
-pub fn get_itunes_prefix(lib_xml: &LibraryXMLData) -> &Path {
+pub fn get_itunes_prefix(lib_xml: &LibraryXMLData) -> Result<&Path> {
     let first_list = &lib_xml.playlists[0];
     let first_track_record = &first_list.playlist_items[0];
     let first_id = first_track_record.track_id.to_string();
-    let first_track = lib_xml.tracks.get(&first_id);
-    let first_location = first_track.unwrap().location.as_ref().unwrap();
-    generate_itunes_prefix(first_location).unwrap()
+    let first_track = lib_xml
+        .tracks
+        .get(&first_id)
+        .context("Cannot find first track")?;
+    let first_location = first_track
+        .location
+        .as_ref()
+        .context("First track has no location")?;
+    let prefix = generate_itunes_prefix(first_location)?;
+    Ok(prefix)
 }
