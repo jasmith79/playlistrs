@@ -22,7 +22,7 @@ where
 {
     let name = track.get_name();
     if args.verbose > 3 {
-        println!("Converting track {}", name);
+        println!("Converting track {name}");
     }
 
     let loc = track.location.as_ref()?;
@@ -37,11 +37,11 @@ where
             loc.strip_prefix(itunes_prefix).map_or_else(
                 |err| {
                     if args.verbose > 0 {
-                        println!("Track {} does not match the iTunes prefix", name);
+                        eprintln!("Track {name} does not match the iTunes prefix");
                     }
 
                     if args.verbose > 2 {
-                        println!("Error is {:?}", err);
+                        eprintln!("Error: {err}");
                     }
 
                     None

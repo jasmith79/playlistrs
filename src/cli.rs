@@ -7,22 +7,20 @@
 //! @copyright 2023
 use clap::{Arg, ArgAction, Command};
 use std::path::PathBuf;
+use std::process;
 
-static MUSIC_PATH_HELP: &str =
-    "Optional path to music files, this will replace the iTunes®\n\
+static MUSIC_PATH_HELP: &str = "Optional path to music files, this will replace the iTunes®\n\
 path to your media files. For example, if you have a music\n\
 file on your Mac at \n\
 /Users/YourName/Music/Music/media.localized/SomeAlbum/SomeSong.m4a\n\
 then this path if present will replace everything before\n\
 'SomeAlbum'.";
 
-static FILE_URL_HELP: &str =
-    "By default Playlister will output plain file paths. However,\n\
+static FILE_URL_HELP: &str = "By default Playlister will output plain file paths. However,\n\
 some applications like VLC expect/work better with file\n\
 urls.";
 
-static DEFAULT_LIST_HELP: &str =
-    "By default iTunes/Music will create a number of playlists,\n\
+static DEFAULT_LIST_HELP: &str = "By default iTunes/Music will create a number of playlists,\n\
 like Downloaded and playlister will ignore them unless you\n\
 pass this flag.";
 
@@ -90,11 +88,18 @@ fn parse_and_validate(matcher: Command) -> PlaylisterArgs {
         .expect("Must include a path to a Library XML file");
 
     if !path.is_file() {
-        panic!("The supplied path must point to a valid iTunes® xml library file");
+        eprintln!("The supplied path must point to a valid iTunes® xml library file");
+        process::exit(3)
     }
 
     // This shouldn't fail for a valid file...
-    let input_dir = path.parent().unwrap().to_path_buf();
+    let input_dir = path
+        .parent()
+        .unwrap_or_else(|| {
+            eprintln!("Input directory invalid.");
+            process::exit(4);
+        })
+        .to_path_buf();
 
     let mpath = args
         .try_get_one::<String>("music_path")
@@ -110,7 +115,8 @@ fn parse_and_validate(matcher: Command) -> PlaylisterArgs {
         .unwrap_or(input_dir);
 
     if !opath.is_dir() {
-        panic!("Output path must be a valid directory.");
+        eprintln!("Output path must be a valid directory.");
+        process::exit(5);
     }
 
     let verbose = args.get_count("verbose");
