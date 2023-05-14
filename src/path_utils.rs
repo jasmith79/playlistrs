@@ -87,3 +87,29 @@ where
         println!("Done.");
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use serde::de::IntoDeserializer;
+    use serde::de::value::{StrDeserializer, Error};
+    use super::*;
+
+    #[test]
+    fn test_deserialize_and_normalize() {
+        let ds: StrDeserializer<Error> = "foobar".into_deserializer();
+        assert_eq!(deserialize_and_normalize(ds), Ok(Some("foobar".nfc().to_string())));
+    }
+
+    #[test]
+    fn test_deserialize_path() {
+        let ds: StrDeserializer<Error> = "file:///foo/bar".into_deserializer();
+        assert_eq!(deserialize_path(ds), Ok(Some(PathBuf::from("/foo/bar"))));
+    }
+
+    #[test]
+    fn test_generate_itunes_prefix() {
+        assert_eq!(generate_itunes_prefix(Path::new("/foo/bar/Music/pizza")).unwrap(), Path::new("/foo/bar/Music"));
+        let err = generate_itunes_prefix(Path::new("/foo/bar")).unwrap_err();
+        assert_eq!(err.to_string(), String::from("Could not determine iTunes prefix from first track location"));
+    }
+}

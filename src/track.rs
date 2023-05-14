@@ -64,3 +64,92 @@ impl Track {
         self.name.as_deref().unwrap_or(UNTITLED_TRACK)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_artist_artist() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: Some(String::from("bob")),
+            album_artist: Some(String::from("steve")),
+            composer: Some(String::from("jane")),
+        };
+
+        assert_eq!(track.get_artist(), "bob");
+    }
+
+    #[test]
+    fn test_get_artist_album_artist() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: None,
+            album_artist: Some(String::from("bob")),
+            composer: Some(String::from("steve")),
+        };
+
+        assert_eq!(track.get_artist(), "bob");
+    }
+
+    #[test]
+    fn test_get_artist_composer() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: None,
+            album_artist: None,
+            composer: Some(String::from("bob")),
+        };
+
+        assert_eq!(track.get_artist(), "bob");
+    }
+
+    #[test]
+    fn test_get_artist_unknown() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: None,
+            album_artist: None,
+            composer: None,
+        };
+
+        assert_eq!(track.get_artist(), "Unknown Artist");
+    }
+
+    #[test]
+    fn test_get_name() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: None,
+            album_artist: None,
+            composer: None,
+        };
+
+        assert_eq!(track.get_name(), "Favorite Song");
+    }
+
+    #[test]
+    fn test_get_name_untitled() {
+        let track = Track {
+            name: None,
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: None,
+            album_artist: None,
+            composer: None,
+        };
+
+        assert_eq!(track.get_name(), "Untitled Track");
+    }
+}
