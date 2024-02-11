@@ -58,7 +58,7 @@ where
     };
 
     let artist = track.get_artist();
-    let duration = track.duration / 1000;
+    let duration = track.duration / 1000; // iTunes uses ms but m3u uses seconds
 
     Some(format!(
         "#EXTINF:{},{} - {}\n{}",
@@ -95,4 +95,153 @@ where
         file_name,
         format!("#EXTM3U\n#name={}\n{}", playlist.name, playlist_tracks),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use super::*;
+    use crate::library_xml::PlaylistItem;
+
+    #[test]
+    fn test_to_m3u_track_basic() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: Some(String::from("dude")),
+            album_artist: None,
+            composer: None,
+        };
+
+        let args = PlaylisterArgs {
+            music_path: Some(PathBuf::from("/baz")),
+            verbose: 1,
+            use_file_url: false,
+            path: PathBuf::from("/some/path"),
+            output_path: PathBuf::from("/whatever"),
+            include_default_playlists: false,
+        };
+
+        let prefix = Path::new("/foo");
+        let result = to_m3u_track(&prefix, &args, &track);
+        assert_eq!(result, Some(String::from("#EXTINF:3,dude - Favorite Song\n/baz/bar")));
+    }
+
+    #[test]
+    fn test_to_m3u_track_file_url() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: Some(String::from("dude")),
+            album_artist: None,
+            composer: None,
+        };
+
+        let args = PlaylisterArgs {
+            music_path: Some(PathBuf::from("/baz")),
+            verbose: 1,
+            use_file_url: true,
+            path: PathBuf::from("/some/path"),
+            output_path: PathBuf::from("/whatever"),
+            include_default_playlists: false,
+        };
+
+        let prefix = Path::new("/foo");
+        let result = to_m3u_track(&prefix, &args, &track);
+        assert_eq!(result, Some(String::from("#EXTINF:3,dude - Favorite Song\nfile:///baz/bar")));
+    }
+
+    #[test]
+    fn test_to_m3u_track_no_location() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: None,
+            duration: 3000,
+            artist: Some(String::from("dude")),
+            album_artist: None,
+            composer: None,
+        };
+
+        let args = PlaylisterArgs {
+            music_path: Some(PathBuf::from("/baz")),
+            verbose: 1,
+            use_file_url: true,
+            path: PathBuf::from("/some/path"),
+            output_path: PathBuf::from("/whatever"),
+            include_default_playlists: false,
+        };
+
+        let prefix = Path::new("/foo");
+        let result = to_m3u_track(&prefix, &args, &track);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_to_m3u_no_music_path() {
+        let track = Track {
+            name: Some(String::from("Favorite Song")),
+            location: Some(PathBuf::from("/foo/bar")),
+            duration: 3000,
+            artist: Some(String::from("dude")),
+            album_artist: None,
+            composer: None,
+        };
+
+        let args = PlaylisterArgs {
+            music_path: None,
+            verbose: 1,
+            use_file_url: true,
+            path: PathBuf::from("/some/path"),
+            output_path: PathBuf::from("/whatever"),
+            include_default_playlists: false,
+        };
+
+        let prefix = Path::new("/foo");
+        let result = to_m3u_track(&prefix, &args, &track);
+        assert_eq!(result, Some(String::from("#EXTINF:3,dude - Favorite Song\nfile:///foo/bar")));
+    }
+
+    #[test]
+    fn test_to_m3u_playlist() {
+        let prefix = Path::new("/foo");
+        let playlist = Playlist {
+            name: String::from("foobar"),
+            playlist_items: vec![PlaylistItem { track_id: 1 }, PlaylistItem { track_id: 2 }],
+        };
+
+        let args = PlaylisterArgs {
+            music_path: Some(PathBuf::from("/baz")),
+            verbose: 1,
+            use_file_url: true,
+            path: PathBuf::from("/some/path"),
+            output_path: PathBuf::from("/whatever"),
+            include_default_playlists: false,
+        };
+
+        let tracks = HashMap::from([
+            (String::from("1"), Track {
+                name: Some(String::from("Favorite Song")),
+                location: Some(PathBuf::from("/foo/bar")),
+                duration: 3000,
+                artist: Some(String::from("dude")),
+                album_artist: None,
+                composer: None,
+            }),
+            (String::from("2"), Track {
+                name: Some(String::from("Least Favorite Song")),
+                location: None,
+                duration: 3000,
+                artist: Some(String::from("dude")),
+                album_artist: None,
+                composer: None,
+            })
+
+        ]);
+
+        let expected = String::from("#EXTM3U\n#name=foobar\n#EXTINF:3,dude - Favorite Song\nfile:///baz/bar");
+        let result = to_m3u_playlist(&prefix, &args, &tracks, &playlist);
+        assert_eq!(result, (String::from("foobar.m3u"), expected));
+    }
 }

@@ -9,7 +9,6 @@ readme = "README.md"
 homepage = "https://github.com/jasmith79/playlistrs"
 license = "MIT"
 repository = "https://github.com/jasmith79/playlistrs"
-version = "0.2.0"
 
 [[bin]]
 name = "playlistrs"
