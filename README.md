@@ -5,8 +5,18 @@ Extracts playlist data from iTunes®/Music Libraries. Tested against iTunes
 
 Starting in MacOS Catalina, iTunes® has been replaced with the new Music app. While the new Music app includes the ability to export to m3u or m3u8, but if like me you have 50+ playlists it's a little inconvenient. You can automate the exporting with Automator but I prefer to just use this tool which can also change the path for other devices.
 
-## Usage
+## Installation
+I recommend installing via [cargo](https://doc.rust-lang.org/cargo/). First make sure you [have Rust
+installed](https://www.rust-lang.org/tools/install) then just run 
 
+```
+cargo install --lock playlistrs
+```
+
+at the terminal prompt. There is also a precompiled binary for Apple Silicon machines in the [releases section](https://github.com/jasmith79/playlistrs/releases) of the
+github repo. You can download, unzip, and put it somewhere on your `$PATH`.
+
+## Usage
 FIrst you'll need to dump your iTunes/Apple Music library because as far as I can tell Apple does not expose an API for
 tool to grab it directly from your local music data. You'll want to open iTunes/Music, then use the context menu to go 
 
